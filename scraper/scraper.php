@@ -14,7 +14,7 @@
  * @license MIT
  */
 
-require_once('../db.php');
+//require_once('../db.php');
 require_once('simple_html_dom.php');
 
 $time_start = microtime(true);
@@ -74,21 +74,80 @@ function clean_sortcodes($val)
     }
 }
 
-echo "Scraping...this could take a while....";
+$titles = array(
+	'rs' => array(
+		1=>'General Provisions',
+		2=>'Aeronautics',
+		3=>'Agriculture and Forestry',
+		4=>'Amusements and Sports',
+		6=>'Banks and Banking',
+		8=>'Cemeteries',
+		9=>'Civil Code-Ancillaries',
+		10=>'Commercial Laws',
+		11=>'Consolidated Public Retirement',
+		12=>'Corporations and Associations',
+		13=>'Courts and Judicial Procedure',
+		14=>'Criminal Law',
+		15=>'Criminal Procedure',
+		16=>'District Attorneys',
+		17=>'Education',
+		18=>'Louisiana Election Code',
+		19=>'Expropriation',
+		20=>'Homesteads and Exemptions',
+		21=>'Hotels and Lodging Houses',
+		22=>'Insurance',
+		23=>'Labor and Worker\'s Compensation',
+		24=>'Legislature and Laws',
+		25=>'Libraries, Museums, and Other Scientific',
+		26=>'Liquors-Alcoholic Beverages',
+		27=>'Louisiana Gaming Control',
+		28=>'Mental Health',
+		29=>'Military, Naval, and Veteran\'s Affairs',
+		30=>'Minerals, Oil, and Gas and Environmental Quality',
+		31=>'Mineral Code',
+		32=>'Motor Vehicles and Traffic Regulation',
+		33=>'Municipalities and Parishes',
+		34=>'Navigation and Shipping',
+		35=>'Notaries Public and Commissioners',
+		36=>'Organization of the Exective Branch',
+		37=>'Professions and Occupations',
+		38=>'Public Contracts, Works and Improvements',
+		39=>'Public Finance',
+		40=>'Public Health and Safety',
+		41=>'Public Lands',
+		42=>'Public Officers and Employees',
+		43=>'Public Printing and Advertisements',
+		44=>'Public Records and Recorders',
+		45=>'Public Utilities and Carriers',
+		46=>'Public Welfare and Assistance',
+		47=>'Revenue and Taxation',
+		48=>'Roads, Bridges and Ferries',
+		49=>'State Administration',
+		50=>'Surveys and Surveyors',
+		51=>'Trade and Commerce',
+		52=>'United States',
+		53=>'War Emergency',
+		54=>'Warehouses',
+		55=>'Weights and Measures',
+		56=>'Wildlife and Fisheries'
+	)
+);
+
+echo "Scraping...this could take a while...\r";
 $counter = 0; //number of laws successfully scraped
 $errors = 0; //db errors
 $docs = 0; //number of urls touched
 
 //Define the ranges of document ids we are requesting; State does not
 //appear to have any logic to assigning these ids, but as far as I can
-//tell the lowest id is around 66000 and the highest around 750000 
-$min = 66000;
+//tell the lowest id is around 67940 and the highest around 750000 
+$min = 67940;
 $max = 750000;
 
 for ($min; $min <= $max; $min++) {
 
     $law = file_get_html('http://legis.la.gov/lss/newWin.asp?doc=' . $min);
-
+echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
     if (is_object($law)) {
 
         $docs++; //url has been hit
@@ -100,6 +159,10 @@ for ($min; $min <= $max; $min++) {
         }
         else
         {
+        	
+        	//Create a new object to store XML content.
+        	$xml = new stdClass();
+        	
             //Parse meta tags
             $meta = array();
             foreach($law->find('meta') as $item) {
@@ -110,7 +173,7 @@ for ($min; $min <= $max; $min++) {
             //the others, there is no such tag.  So parse the <title> tag
             $title = array();
             foreach ($law->find('title') as $item) {
-                $title = $item->innertext;
+                $xml->catch_line = $item->innertext;
             }
 
             //Get the entire body of the law; will use later when applying diff
@@ -118,14 +181,15 @@ for ($min; $min <= $max; $min++) {
             foreach ($law->find('body') as $b) {
                 $body = $b->innertext;
             }
-
-            //Strip all class and align attributes from p http://stackoverflow.com/a/3026111/49359
-            $body_html = str_get_html($body);
-            foreach ( $body_html->find('p') as $value ){
-                $value->class = null;
-                $value->align = null;
-            }
-
+			
+			//Get the text of the law.
+			$xml->text = '';
+			foreach ($law->find('p.00003') as $paragraph)
+			{
+				$xml->text .= $paragraph->plaintext."\r";
+##Set aside the last section, assuming it has the right keywords, as $xml->history.
+			}
+			
             //generate an alternative description if meta does not have it
             //Having to find the align attribute is a special bit of fun; 99%
             //of the time, the first paragraph has the description; but sometimes,
@@ -137,47 +201,40 @@ for ($min; $min <= $max; $min++) {
             {
                 $alt_description = explode('&nbsp;',$first_para->innertext);
             }
+            
+            //Save the section identifier.
+            $xml->section_number = $law->find('title',0)->plaintext;
+            
+            //Save the title number.
+            $tmp = explode(':', $xml->section_number);
+            $tmp = explode(' ', $tmp[0]);
+            $xml->structure->unit = $tmp[1];
 
             if (isset($meta['description']))
             {
-                $description = $meta['description'];
+                $xml->catch_line = $meta['description'];
             }
             elseif (isset($alt_description[1]))
             {
-                $description = $alt_description[1];
+                $xml->catch_line = $alt_description[1];
             }
             else
             {
-                $description = ''; //all else fails
+                $xml->catch_line = ''; //all else fails
             }
 
             //Deal with inconsistent case of sortcode meta tag;
             //sometimes it's capitalized, sometimes not
             if (isset($meta['sortcode']))
             {
-                $sortcode = clean_sortcodes($meta['sortcode']);    
+                $xml->order_by = clean_sortcodes($meta['sortcode']);    
             }
             else
             {
-                $sortcode = clean_sortcodes($meta['Sortcode']);    
+                $xml->order_by = clean_sortcodes($meta['Sortcode']);    
             }
-
-            //Put data in db
-            $q = $dbh->prepare("INSERT INTO `lalaws`.`laws` (`id`, `docid`, `title`,
-            `description`, `sortcode`, `law_text`,`last_scraped`) 
-            VALUES (NULL, :docid, :title, :description, :sortcode, :law_text, 
-            CURRENT_TIMESTAMP);");
-    
-            $data = array(
-                ':docid' => $min,
-                ':title' => $title,
-                ':description' => $description,
-                ':sortcode' => $sortcode,
-                ':law_text' => $body_html
-                );
-
-            $q->execute($data);
-
+print_r($xml);
+die();
             $error = $q->errorInfo();
             if ($error[1])
             {
