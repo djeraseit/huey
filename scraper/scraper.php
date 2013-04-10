@@ -263,18 +263,6 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             {
                 $xml->order_by = clean_sortcodes($meta['Sortcode']);    
             }
-print_r($xml);
-die();
-            $error = $q->errorInfo();
-            if ($error[1])
-            {
-                print_r($error);$errors++;
-            }
-            else
-            {
-                $counter++;
-            }
-
             $law->clear(); 
             unset($law);
         }
