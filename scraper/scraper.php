@@ -269,6 +269,9 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             }
             $law->clear(); 
             unset($law);
+            
+         	file_put_contents(str_replace(' ', '_', $xml->section_number.'.xml'), print_r($xml, TRUE));
+            
         }
     }
 }
