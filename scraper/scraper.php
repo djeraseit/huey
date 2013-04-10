@@ -144,6 +144,22 @@ $titles = array(
 		54=>'Warehouses',
 		55=>'Weights and Measures',
 		56=>'Wildlife and Fisheries'
+	//Constitution
+	'const' => array (
+		1=>'Declaration of Rights',
+		2=>'Distribution of Powers',
+		3=>'Legislative Branch',
+		4=>'Executive Branch',
+		5=>'Judicial Branch',
+		6=>'Local Government',
+		7=>'Revenue & Finance',
+		8=>'Education',
+		9=>'Natural Resources',
+		10=>'Public Officials & Employees',
+		11=>'Elections',
+		12=>'General Provisions',
+		13=>'Constitution Revision',
+		14=>'Transitional Provisions'
 	)
 );
 
