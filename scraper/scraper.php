@@ -235,10 +235,14 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             //Save the section identifier.
             $xml->section_number = $law->find('title',0)->plaintext;
             
+            //Save the major structural unit
+            $tmp = explode(' ', $xml->section_number);
+            $xml->structure->unit->{0} = $acronyms[strtolower($tmp{0})];
+            
             //Save the title number.
             $tmp = explode(':', $xml->section_number);
             $tmp = explode(' ', $tmp[0]);
-            $xml->structure->unit = $tmp[1];
+            $xml->structure->unit->{1} = $tmp[1];
 
             if (isset($meta['description']))
             {
