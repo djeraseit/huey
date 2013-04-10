@@ -88,7 +88,11 @@ $acronyms = array(
 	'srule' => 'Senate Rules',
 	'jrule' => 'Joint Rules'
 );
+
+// The structure of the titles that structure the statutes.
 $titles = array(
+	
+	//Revised Statutes
 	'rs' => array(
 		1=>'General Provisions',
 		2=>'Aeronautics',
@@ -144,6 +148,8 @@ $titles = array(
 		54=>'Warehouses',
 		55=>'Weights and Measures',
 		56=>'Wildlife and Fisheries'
+	),
+	
 	//Constitution
 	'const' => array (
 		1=>'Declaration of Rights',
@@ -267,6 +273,7 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             {
                 $xml->order_by = clean_sortcodes($meta['Sortcode']);    
             }
+            
             $law->clear(); 
             unset($law);
             
