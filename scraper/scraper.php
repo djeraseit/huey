@@ -74,6 +74,20 @@ function clean_sortcodes($val)
     }
 }
 
+// Abbreviations for the components of the laws.
+$acronyms = array(
+	'rs' => 'Revised Statutes',
+	'lc' => 'Louisiana Constitution',
+	'ca' => 'Constitution Ancillaries',
+	'chc' => 'Children\'s Code',
+	'cc' => 'Civil Code',
+	'ccp' => 'Code of Civil Procedure',
+	'ccrp' => 'Code of Criminal Procedure',
+	'ce' => 'Code of Evidence',
+	'hrule' => 'House Rules',
+	'srule' => 'Senate Rules',
+	'jrule' => 'Joint Rules'
+);
 $titles = array(
 	'rs' => array(
 		1=>'General Provisions',
