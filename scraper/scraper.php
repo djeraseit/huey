@@ -312,6 +312,8 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             {
                 $output->catch_line = ''; //all else fails
             }
+            
+            $output->metadata->doc_id = $min;
 
             //Deal with inconsistent case of sortcode meta tag;
             //sometimes it's capitalized, sometimes not
