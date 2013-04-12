@@ -247,7 +247,7 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
         {
         	
         	//Create a new object to store XML content.
-        	$xml = new stdClass();
+        	$output = new stdClass();
         	
             //Parse meta tags
             $meta = array();
@@ -259,7 +259,7 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             //the others, there is no such tag.  So parse the <title> tag
             $title = array();
             foreach ($law->find('title') as $item) {
-                $xml->catch_line = $item->innertext;
+                $output->catch_line = $item->innertext;
             }
 
             //Get the entire body of the law; will use later when applying diff
@@ -269,11 +269,11 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             }
 			
 			//Get the text of the law.
-			$xml->text = '';
+			$output->text = '';
 			foreach ($law->find('p.00003') as $paragraph)
 			{
-				$xml->text .= $paragraph->plaintext."\r";
-##Set aside the last section, assuming it has the right keywords, as $xml->history.
+				$output->text .= $paragraph->plaintext."\r";
+##Set aside the last section, assuming it has the right keywords, as $output->history.
 			}
 			
             //generate an alternative description if meta does not have it
@@ -289,39 +289,39 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             }
             
             //Save the section identifier.
-            $xml->section_number = $law->find('title',0)->plaintext;
+            $output->section_number = $law->find('title',0)->plaintext;
             
             //Save the major structural unit
-            $tmp = explode(' ', $xml->section_number);
-            $xml->structure->unit->{0} = $acronyms[strtolower($tmp{0})];
+            $tmp = explode(' ', $output->section_number);
+            $output->structure->unit->{0} = $acronyms[strtolower($tmp{0})];
             
             //Save the title number.
-            $tmp = explode(':', $xml->section_number);
+            $tmp = explode(':', $output->section_number);
             $tmp = explode(' ', $tmp[0]);
-            $xml->structure->unit->{1} = $tmp[1];
+            $output->structure->unit->{1} = $tmp[1];
 
             if (isset($meta['description']))
             {
-                $xml->catch_line = $meta['description'];
+                $output->catch_line = $meta['description'];
             }
             elseif (isset($alt_description[1]))
             {
-                $xml->catch_line = $alt_description[1];
+                $output->catch_line = $alt_description[1];
             }
             else
             {
-                $xml->catch_line = ''; //all else fails
+                $output->catch_line = ''; //all else fails
             }
 
             //Deal with inconsistent case of sortcode meta tag;
             //sometimes it's capitalized, sometimes not
             if (isset($meta['sortcode']))
             {
-                $xml->order_by = clean_sortcodes($meta['sortcode']);    
+                $output->order_by = clean_sortcodes($meta['sortcode']);    
             }
             else
             {
-                $xml->order_by = clean_sortcodes($meta['Sortcode']);    
+                $output->order_by = clean_sortcodes($meta['Sortcode']);    
             }
             
             $law->clear(); 
