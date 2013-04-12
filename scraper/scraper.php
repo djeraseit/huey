@@ -329,6 +329,7 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             $law->clear(); 
             unset($law);
             
+            //Iterate through every field and do some cleanup.
             foreach ($output as &$tmp)
             {
             	if (is_string($tmp))
@@ -338,9 +339,7 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
 	            }
             }
 				
-			/*
-			 * Convert this law's data to XML.
-			 */
+			//Convert this law's data to XML.
 			$xml = new SimpleXMLElement('<law />');
 			object_to_xml($output, $xml);
 			$dom = dom_import_simplexml($xml)->ownerDocument;
