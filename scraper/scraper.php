@@ -329,7 +329,24 @@ echo 'http://legis.la.gov/lss/newWin.asp?doc=' . $min."\n";
             $law->clear(); 
             unset($law);
             
-         	file_put_contents(str_replace(' ', '_', $xml->section_number.'.xml'), print_r($xml, TRUE));
+            foreach ($output as &$tmp)
+            {
+            	if (is_string($tmp))
+            	{
+            		$tmp = trim($tmp);
+	            	$tmp = utf8_encode($tmp);
+	            }
+            }
+				
+			/*
+			 * Convert this law's data to XML.
+			 */
+			$xml = new SimpleXMLElement('<law />');
+			object_to_xml($output, $xml);
+			$dom = dom_import_simplexml($xml)->ownerDocument;
+			$dom->formatOutput = true;
+            
+         	file_put_contents(str_replace(' ', '_', 'xml/'.$output->section_number.'.xml'), $xml->asXML());
             
         }
     }
