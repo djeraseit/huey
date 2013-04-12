@@ -74,6 +74,56 @@ function clean_sortcodes($val)
     }
 }
 
+/**
+ * Recusively travserses through an array to propagate SimpleXML objects.
+ * @param array $array the array to parse
+ * @param object $xml the Simple XML object (must be at least a single empty node)
+ * @return object the Simple XML object (with array objects added)
+ * @author Ben Balter
+ */
+function object_to_xml( $array, $xml )
+{
+
+	//array of keys that will be treated as attributes, not children
+	$attributes = array( 'id', 'number', 'label', 'prefix' );
+
+	//recursively loop through each item
+	foreach ( $array as $key => $value )
+	{
+
+		// if this is a numbered array, grab the parent node to determine the node name
+		if ( is_numeric( $key ) )
+		{
+			$key = 'unit';
+		}
+
+		// if this is an attribute, treat as an attribute
+		if ( in_array( $key, $attributes ) )
+		{
+			$xml->addAttribute( $key, $value );
+		}
+		
+		// if this value is an object or array, add a child node and treat recursively
+		else
+		{
+			if ( is_object( $value ) || is_array( $value ) )
+			{
+				$child = $xml->addChild(  $key );
+				$child = object_to_xml( $value, $child );
+
+				//simple key/value child pair
+			}
+			else
+			{
+				$xml->addChild( $key, $value );
+			}
+		}
+	}
+
+	return $xml;
+
+}
+
 // Abbreviations for the components of the laws.
 $acronyms = array(
 	'rs' => 'Revised Statutes',
